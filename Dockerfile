@@ -29,10 +29,10 @@ RUN \
 RUN unzip /tmp/go-agent-21.2.0-12498.zip -d /
 RUN mv /go-agent-21.2.0 /go-agent && chown -R ${UID}:0 /go-agent && chmod -R g=u /go-agent
 
-FROM centos:8
+FROM amazonlinux:2
 
 LABEL gocd.version="21.2.0" \
-  description="GoCD agent based on centos version 8" \
+  description="GoCD agent based on Amazon Linux version 2" \
   maintainer="ThoughtWorks, Inc. <support@thoughtworks.com>" \
   url="https://www.gocd.org" \
   gocd.full.version="21.2.0-12498" \
@@ -51,13 +51,15 @@ RUN \
 # add mode and permissions for files we added above
   chmod 0755 /usr/local/sbin/tini && \
   chown root:root /usr/local/sbin/tini && \
+# install shadow-utils so we can add our user
+  yum install -y shadow-utils && \
 # add our user and group first to make sure their IDs get assigned consistently,
 # regardless of whatever dependencies get added
 # add user to root group for gocd to work on openshift
   useradd -u ${UID} -g root -d /home/go -m go && \
     yum install --assumeyes glibc-langpack-en && \
   yum update -y && \
-  yum install --assumeyes git mercurial subversion openssh-clients bash unzip curl procps procps-ng coreutils-single && \
+  yum install --assumeyes git mercurial subversion openssh-clients bash unzip curl procps procps-ng coreutils-single tar && \
   yum clean all && \
   curl --fail --location --silent --show-error 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jre_x64_linux_hotspot_15.0.2_7.tar.gz' --output /tmp/jre.tar.gz && \
   mkdir -p /gocd-jre && \
