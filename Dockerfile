@@ -1,4 +1,4 @@
-# Copyright 2021 ThoughtWorks, Inc.
+# Copyright 2022 Thoughtworks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,28 +17,23 @@
 # Please file any issues or PRs at https://github.com/gocd/gocd
 ###############################################################################################
 
-FROM alpine:latest as gocd-agent-unzip
-
+FROM curlimages/curl:latest as gocd-agent-unzip
+USER root
 ARG UID=1000
-
-RUN \
-  apk --no-cache upgrade && \
-  apk add --no-cache curl && \
-  curl --fail --location --silent --show-error "https://download.gocd.org/binaries/21.2.0-12498/generic/go-agent-21.2.0-12498.zip" > /tmp/go-agent-21.2.0-12498.zip
-
-RUN unzip /tmp/go-agent-21.2.0-12498.zip -d /
-RUN mv /go-agent-21.2.0 /go-agent && chown -R ${UID}:0 /go-agent && chmod -R g=u /go-agent
+RUN curl --fail --location --silent --show-error "https://download.gocd.org/binaries/22.2.0-14697/generic/go-agent-22.2.0-14697.zip" > /tmp/go-agent-22.2.0-14697.zip
+RUN unzip /tmp/go-agent-22.2.0-14697.zip -d /
+RUN mv /go-agent-22.2.0 /go-agent && chown -R ${UID}:0 /go-agent && chmod -R g=u /go-agent
 
 FROM amazonlinux:2
 
-LABEL gocd.version="21.2.0" \
+LABEL gocd.version="22.2.0" \
   description="GoCD agent based on Amazon Linux version 2" \
-  maintainer="ThoughtWorks, Inc. <support@thoughtworks.com>" \
+  maintainer="Guidebook, Inc. <it@guidebook.com>" \
   url="https://www.gocd.org" \
-  gocd.full.version="21.2.0-12498" \
-  gocd.git.sha="16e1ac6956cd5177a99dc3fe33503661881c354f"
+  gocd.full.version="22.2.0-14697" \
+  gocd.git.sha="4bdda4e0d769e66da651926c7066979740bd7ae7"
 
-ADD https://github.com/krallin/tini/releases/download/v0.18.0/tini-static-amd64 /usr/local/sbin/tini
+ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini-static-amd64 /usr/local/sbin/tini
 
 # force encoding
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
@@ -55,13 +50,13 @@ RUN \
   yum install -y shadow-utils && \
 # add our user and group first to make sure their IDs get assigned consistently,
 # regardless of whatever dependencies get added
-# add user to root group for gocd to work on openshift
+# add user to root group for GoCD to work on openshift
   useradd -u ${UID} -g root -d /home/go -m go && \
     yum install --assumeyes glibc-langpack-en && \
   yum update -y && \
-  yum install --assumeyes git mercurial subversion openssh-clients bash unzip curl procps procps-ng coreutils-single tar && \
+  yum install -y git mercurial subversion openssh-clients bash unzip procps procps-ng coreutils-single curl tar && \
   yum clean all && \
-  curl --fail --location --silent --show-error 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jre_x64_linux_hotspot_15.0.2_7.tar.gz' --output /tmp/jre.tar.gz && \
+  curl --fail --location --silent --show-error 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4%2B8/OpenJDK17U-jre_x64_linux_hotspot_17.0.4_8.tar.gz' --output /tmp/jre.tar.gz && \
   mkdir -p /gocd-jre && \
   tar -xf /tmp/jre.tar.gz -C /gocd-jre --strip 1 && \
   rm -rf /tmp/jre.tar.gz && \
